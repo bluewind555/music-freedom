@@ -1,0 +1,5 @@
+node_modules/
+.claude/
+*.log
+*.zip
+phone_sales.html

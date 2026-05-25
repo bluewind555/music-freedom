@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>免费音乐网站收录 - 音乐天堂</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 10px;
+        }
+
+        .search-bar {
+            max-width: 600px;
+            margin: 30px auto;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .search-bar i {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+            border-color: transparent;
+        }
+
+        .websites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 0 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .website-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .website-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .website-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+        }
+
+        .website-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .website-info p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .website-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .tag.free {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+
+        .tag.paid {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+        }
+
+        .tag.download {
+            background: rgba(72, 219, 251, 0.2);
+            color: #48dbfb;
+        }
+
+        .tag.no-download {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .card-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .link-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .link-btn.primary {
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+            color: #fff;
+        }
+
+        .link-btn.primary:hover {
+            transform: scale(1.05);
+        }
+
+        .link-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .link-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .player-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .player-section.show {
+            transform: translateY(0);
+        }
+
+        .player-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .album-cover {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-info h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .player-info p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .control-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.play {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 150px;
+        }
+
+        .volume-bar {
+            flex: 1;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48dbfb, #ff6b6b);
+            border-radius: 5px;
+            width: 70%;
+        }
+
+        .time-display {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            min-width: 70px;
+        }
+
+        .source-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .source-selector select {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .download-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 2000;
+            transition: all 0.3s ease;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .download-modal.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .download-modal h3 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .download-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .download-option {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .download-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .player-container {
+                flex-wrap: wrap;
+            }
+
+            .progress-bar {
+                order: 5;
+                width: 100%;
+            }
+
+            .volume-control {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="source-selector">
+        <select id="sourceSelect">
+            <option value="netease">网易云音乐</option>
+            <option value="qq">QQ音乐</option>
+            <option value="kuwo">酷我音乐</option>
+            <option value="kugou">酷狗音乐</option>
+        </select>
+    </div>
+
+    <header>
+        <h1><i class="fas fa-music"></i> 免费音乐网站收录</h1>
+        <p>汇集全网优质音乐资源，一键畅听</p>
+    </header>
+
+    <div class="search-bar">
+        <input type="text" placeholder="搜索音乐网站..." id="searchInput">
+        <i class="fas fa-search"></i>
+    </div>
+
+    <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="free">免费</button>
+        <button class="filter-btn" data-filter="download">可下载</button>
+        <button class="filter-btn" data-filter="online">在线听歌</button>
+    </div>
+
+    <div class="websites-grid" id="websitesGrid">
+    </div>
+
+    <div class="player-section" id="playerSection">
+        <div class="player-container">
+            <div class="album-cover" id="albumCover">
+                <i class="fas fa-music"></i>
+            </div>
+            <div class="player-info">
+                <h4 id="currentSong">未播放</h4>
+                <p id="currentArtist">选择一首歌曲开始播放</p>
+            </div>
+            <div class="player-controls">
+                <button class="control-btn" id="prevBtn"><i class="fas fa-step-backward"></i></button>
+                <button class="control-btn play" id="playBtn"><i class="fas fa-play"></i></button>
+                <button class="control-btn" id="nextBtn"><i class="fas fa-step-forward"></i></button>
+            </div>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+            <div class="volume-control">
+                <i class="fas fa-volume-up"></i>
+                <div class="volume-bar" id="volumeBar">
+                    <div class="volume-fill" id="volumeFill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="download-modal" id="downloadModal">
+        <button class="close-btn" id="closeModal"><i class="fas fa-times"></i></button>
+        <h3>下载歌曲</h3>
+        <div class="download-options" id="downloadOptions"></div>
+    </div>
+
+    <script>
+        const musicWebsites = [
+            {
+                id: 1,
+                name: '咪咕音乐',
+                description: '中国移动旗下音乐平台，正版免费',
+                icon: '🎵',
+                free: true,
+                download: true,
+                onlinePlay: true,
+                url: 'https://music.migu.cn',
+                color: '#ff6b6b'
+            },
+            {
+                id: 2,
+                name: '酷我音乐',
+                description: '海量曲库，支持免费下载',
+                icon: '🎶',
+                free: true,
+                download: true,
+                onlinePlay: true,
+                url: 'https://www.kuwo.cn',
+                color: '#48dbfb'
+            },
+            {
+                id: 3,
+                name: '酷狗音乐',
+                description: '老牌音乐平台，音质出色',
+                icon: '🎧',
+                free: true,
+                download: true,
+                onlinePlay: true,
+                url: 'https://www.kugou.com',
+                color: '#feca57'
+            },
+            {
+                id: 4,
+                name: '网易云音乐',
+                description: '音乐社区，歌单丰富',
+                icon: '☁️',
+                free: true,
+                download: false,
+                onlinePlay: true,
+                url: 'https://music.163.com',
+                color: '#ff3a3a'
+            },
+            {
+                id: 5,
+                name: 'QQ音乐',
+                description: '腾讯旗下，版权丰富',
+                icon: '🐧',
+                free: true,
+                download: false,
+                onlinePlay: true,
+                url: 'https://y.qq.com',
+                color: '#1677ff'
+            },
+            {
+                id: 6,
+                name: 'B站音乐',
+                description: '二次元音乐聚集地',
+                icon: '📺',
+                free: true,
+                download: true,
+                onlinePlay: true,
+                url: 'https://music.bilibili.com',
+                color: '#ff8c00'
+            },
+            {
+                id: 7,
+                name: '千千音乐',
+                description: '高品质音乐下载',
+                icon: '🎼',
+                free: true,
+                download: true,
+                onlinePlay: true,
+                url: 'https://www.taihe.com',
+                color: '#9b59b6'
+            },
+            {
+                id: 8,
+                name: '喜马拉雅',
+                description: '有声读物与音乐电台',
+                icon: '🎙️',
+                free: false,
+                download: false,
+                onlinePlay: true,
+                url: 'https://www.ximalaya.com',
+                color: '#ff6b9d'
+            },
+            {
+                id: 9,
+                name: '荔枝FM',
+                description: '音乐电台与播客',
+                icon: '🔊',
+                free: true,
+                download: false,
+                onlinePlay: true,
+                url: 'https://www.lizhi.fm',
+                color: '#e74c3c'
+            },
+            {
+                id: 10,
+                name: '全民K歌',
+                description: '唱歌社交平台',
+                icon: '🎤',
+                free: true,
+                download: false,
+                onlinePlay: true,
+                url: 'https://kg.qq.com',
+                color: '#f39c12'
+            },
+            {
+                id: 11,
+                name: '爱给网',
+                description: '免费音效音乐素材下载',
+                icon: '🎹',
+                free: true,
+                download: true,
+                onlinePlay: true,
+                url: 'https://www.aigei.com',
+                color: '#3498db'
+            },
+            {
+                id: 12,
+                name: '耳聆网',
+                description: '声音分享平台',
+                icon: '👂',
+                free: true,
+                download: true,
+                onlinePlay: true,
+                url: 'https://www.ear0.com',
+                color: '#2ecc71'
+            }
+        ];
+
+        const mockSongs = [
+            { id: 1, title: '晴天', artist: '周杰伦', duration: 269 },
+            { id: 2, title: '夜曲', artist: '周杰伦', duration: 245 },
+            { id: 3, title: '稻香', artist: '周杰伦', duration: 233 },
+            { id: 4, title: '告白气球', artist: '周杰伦', duration: 215 },
+            { id: 5, title: '七里香', artist: '周杰伦', duration: 299 },
+            { id: 6, title: '以父之名', artist: '周杰伦', duration: 320 },
+            { id: 7, title: '珊瑚海', artist: '周杰伦', duration: 269 },
+            { id: 8, title: '简单爱', artist: '周杰伦', duration: 279 }
+        ];
+
+        let currentFilter = 'all';
+        let searchKeyword = '';
+        let currentSource = 'netease';
+        let currentSongIndex = 0;
+        let isPlaying = false;
+        let progressInterval = null;
+
+        function renderWebsites() {
+            const grid = document.getElementById('websitesGrid');
+            let filtered = musicWebsites;
+
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(website => {
+                    if (currentFilter === 'free') return website.free;
+                    if (currentFilter === 'download') return website.download;
+                    if (currentFilter === 'online') return website.onlinePlay;
+                    return true;
+                });
+            }
+
+            if (searchKeyword) {
+                filtered = filtered.filter(website =>
+                    website.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                    website.description.toLowerCase().includes(searchKeyword.toLowerCase())
+                );
+            }
+
+            grid.innerHTML = filtered.map(website => `
+                <div class="website-card">
+                    <div class="card-header">
+                        <div class="website-icon" style="background: linear-gradient(135deg, ${website.color}, #feca57);">
+                            ${website.icon}
+                        </div>
+                        <div class="website-info">
+                            <h3>${website.name}</h3>
+                            <p>${website.description}</p>
+                        </div>
+                    </div>
+                    <div class="website-tags">
+                        <span class="tag ${website.free ? 'free' : 'paid'}">
+                            ${website.free ? '免费' : '付费'}
+                        </span>
+                        <span class="tag ${website.download ? 'download' : 'no-download'}">
+                            ${website.download ? '可下载' : '不可下载'}
+                        </span>
+                        <span class="tag ${website.onlinePlay ? 'download' : 'no-download'}">
+                            ${website.onlinePlay ? '在线听歌' : '无法在线听'}
+                        </span>
+                    </div>
+                    <div class="card-links">
+                        <button class="link-btn primary" onclick="openWebsite('${website.url}')">
+                            <i class="fas fa-external-link-alt"></i> 访问网站
+                        </button>
+                        ${website.download ? `
+                        <button class="link-btn secondary" onclick="openDownloadModal('${website.name}')">
+                            <i class="fas fa-download"></i> 下载
+                        </button>
+                        ` : ''}
+                        ${website.onlinePlay ? `
+                        <button class="link-btn secondary" onclick="playMusic('${website.name}')">
+                            <i class="fas fa-play"></i> 试听
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openWebsite(url) {
+            window.open(url, '_blank');
+        }
+
+        function openDownloadModal(websiteName) {
+            const modal = document.getElementById('downloadModal');
+            const overlay = document.getElementById('overlay');
+            const options = document.getElementById('downloadOptions');
+
+            options.innerHTML = `
+                <div class="download-option" onclick="startDownload('mp3', '128kbps')">
+                    <span>MP3 128kbps</span>
+                    <i class="fas fa-download"></i>
+                </div>
+                <div class="download-option" onclick="startDownload('mp3', '320kbps')">
+                    <span>MP3 320kbps</span>
+                    <i class="fas fa-download"></i>
+                </div>
+                <div class="download-option" onclick="startDownload('flac', '无损')">
+                    <span>FLAC 无损</span>
+                    <i class="fas fa-download"></i>
+                </div>
+            `;
+
+            modal.classList.add('show');
+            overlay.classList.add('show');
+        }
+
+        function startDownload(format, quality) {
+            const song = mockSongs[currentSongIndex];
+            const link = document.createElement('a');
+            link.href = `#download/${format}/${quality}/${song.title}`;
+            link.download = `${song.title}-${quality}.${format}`;
+            link.click();
+            
+            alert(`正在从${currentSource === 'netease' ? '网易云' : currentSource === 'qq' ? 'QQ音乐' : currentSource === 'kuwo' ? '酷我' : '酷狗'}下载：${song.title}.${format} (${quality})`);
+            closeModal();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('downloadModal');
+            const overlay = document.getElementById('overlay');
+            modal.classList.remove('show');
+            overlay.classList.remove('show');
+        }
+
+        function playMusic(websiteName) {
+            const player = document.getElementById('playerSection');
+            const song = mockSongs[currentSongIndex];
+            
+            document.getElementById('currentSong').textContent = song.title;
+            document.getElementById('currentArtist').textContent = song.artist;
+            player.classList.add('show');
+            
+            if (!isPlaying) {
+                togglePlay();
+            }
+        }
+
+        function togglePlay() {
+            const playBtn = document.getElementById('playBtn');
+            const icon = playBtn.querySelector('i');
+            
+            if (isPlaying) {
+                icon.className = 'fas fa-play';
+                clearInterval(progressInterval);
+            } else {
+                icon.className = 'fas fa-pause';
+                startProgress();
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function startProgress() {
+            const duration = mockSongs[currentSongIndex].duration;
+            const progressFill = document.getElementById('progressFill');
+            const progressBar = document.getElementById('progressBar');
+            const timeDisplay = document.getElementById('timeDisplay');
+            let progress = 0;
+
+            progressInterval = setInterval(() => {
+                progress += 1;
+                const percentage = (progress / duration) * 100;
+                progressFill.style.width = `${percentage}%`;
+                
+                const current = formatTime(progress);
+                const total = formatTime(duration);
+                timeDisplay.textContent = `${current} / ${total}`;
+
+                if (progress >= duration) {
+                    nextSong();
+                }
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function prevSong() {
+            currentSongIndex = (currentSongIndex - 1 + mockSongs.length) % mockSongs.length;
+            updatePlayer();
+        }
+
+        function nextSong() {
+            currentSongIndex = (currentSongIndex + 1) % mockSongs.length;
+            updatePlayer();
+        }
+
+        function updatePlayer() {
+            const song = mockSongs[currentSongIndex];
+            document.getElementById('currentSong').textContent = song.title;
+            document.getElementById('currentArtist').textContent = song.artist;
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('timeDisplay').textContent = `0:00 / ${formatTime(song.duration)}`;
+            
+            if (isPlaying) {
+                clearInterval(progressInterval);
+                startProgress();
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchKeyword = e.target.value;
+            renderWebsites();
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                renderWebsites();
+            });
+        });
+
+        document.getElementById('sourceSelect').addEventListener('change', (e) => {
+            currentSource = e.target.value;
+            alert(`已切换到${e.target.options[e.target.selectedIndex].text}源`);
+        });
+
+        document.getElementById('playBtn').addEventListener('click', togglePlay);
+        document.getElementById('prevBtn').addEventListener('click', prevSong);
+        document.getElementById('nextBtn').addEventListener('click', nextSong);
+        document.getElementById('closeModal').addEventListener('click', closeModal);
+        document.getElementById('overlay').addEventListener('click', closeModal);
+
+        document.getElementById('progressBar').addEventListener('click', (e) => {
+            const rect = e.target.getBoundingClientRect();
+            const percentage = (e.clientX - rect.left) / rect.width;
+            const duration = mockSongs[currentSongIndex].duration;
+            const progress = Math.floor(percentage * duration);
+            
+            document.getElementById('progressFill').style.width = `${percentage * 100}%`;
+            document.getElementById('timeDisplay').textContent = `${formatTime(progress)} / ${formatTime(duration)}`;
+            
+            if (isPlaying) {
+                clearInterval(progressInterval);
+                let currentProgress = progress;
+                progressInterval = setInterval(() => {
+                    currentProgress += 1;
+                    const p = (currentProgress / duration) * 100;
+                    document.getElementById('progressFill').style.width = `${p}%`;
+                    document.getElementById('timeDisplay').textContent = `${formatTime(currentProgress)} / ${formatTime(duration)}`;
+                    
+                    if (currentProgress >= duration) {
+                        nextSong();
+                    }
+                }, 1000);
+            }
+        });
+
+        document.getElementById('volumeBar').addEventListener('click', (e) => {
+            const rect = e.target.getBoundingClientRect();
+            const percentage = (e.clientX - rect.left) / rect.width;
+            document.getElementById('volumeFill').style.width = `${percentage * 100}%`;
+        });
+
+        renderWebsites();
+    </script>
+</body>
+</html>

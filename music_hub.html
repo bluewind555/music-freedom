@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音乐聚合搜索 · 免费在线听歌</title>
+<style>
+/* ===== Reset & Base ===== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#0a0e1a;--bg2:#101626;--bg3:#1a1f35;--bg4:#242a45;
+  --card:rgba(26,31,53,0.7);--card-hover:rgba(36,42,69,0.8);
+  --border:rgba(99,102,241,0.15);--border-hover:rgba(99,102,241,0.35);
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --accent:#6366f1;--accent2:#818cf8;--accent3:#a78bfa;
+  --green:#10b981;--orange:#f59e0b;--red:#ef4444;--pink:#ec4899;
+  --shadow:0 8px 40px rgba(0,0,0,0.5);
+  --radius:14px;--radius-sm:10px;
+  --font:'Inter','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+}
+html,body{height:100%}
+body{
+  font-family:var(--font);background:var(--bg1);color:var(--text);
+  overflow-x:hidden;padding-bottom:90px;
+}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* ===== Animated BG ===== */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+.bg .orb{position:absolute;border-radius:50%;filter:blur(150px);opacity:.12;animation:orb 25s ease-in-out infinite}
+.bg .orb:nth-child(1){width:700px;height:700px;top:-250px;left:-150px;background:var(--accent);animation-delay:0s}
+.bg .orb:nth-child(2){width:600px;height:600px;bottom:-200px;right:-150px;background:var(--pink);animation-delay:-8s}
+.bg .orb:nth-child(3){width:500px;height:500px;top:50%;left:60%;background:var(--accent3);animation-delay:-16s;opacity:.08}
+@keyframes orb{
+  0%,100%{transform:translate(0,0)scale(1)}
+  25%{transform:translate(80px,-60px)scale(1.1)}
+  50%{transform:translate(-50px,80px)scale(.9)}
+  75%{transform:translate(70px,50px)scale(1.05)}
+}
+
+/* ===== Container ===== */
+.container{max-width:1280px;margin:0 auto;padding:20px 24px 100px}
+
+/* ===== Header ===== */
+.header{display:flex;justify-content:space-between;align-items:center;padding:24px 0 20px;flex-wrap:wrap;gap:16px}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo{
+  width:46px;height:46px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:0 4px 20px rgba(99,102,241,0.3);
+}
+.header-left h1{font-size:24px;font-weight:700;letter-spacing:-.3px;background:linear-gradient(135deg,#f1f5f9,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-left .sub{font-size:13px;color:var(--text3);margin-top:2px}
+
+/* ===== Source Selector ===== */
+.source-bar{display:flex;gap:8px;flex-wrap:wrap}
+.source-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--card);
+  color:var(--text2);font-size:13px;cursor:pointer;
+  transition:all .25s;backdrop-filter:blur(12px);
+}
+.source-btn:hover{border-color:var(--border-hover);color:var(--text);background:var(--card-hover)}
+.source-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 4px 16px rgba(99,102,241,0.3)}
+.source-btn .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.source-btn .dot.green{background:var(--green)}
+.source-btn .dot.orange{background:var(--orange)}
+.source-btn .dot.red{background:var(--red)}
+
+/* ===== Search ===== */
+.search-section{margin:20px 0 24px}
+.search-box{
+  display:flex;gap:0;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;transition:all .3s;
+  max-width:640px;
+}
+.search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.15)}
+.search-box select{
+  background:var(--bg4);border:none;color:var(--text2);padding:0 12px;
+  font-size:13px;outline:none;cursor:pointer;min-width:80px;
+  border-right:1px solid var(--border);
+}
+.search-box input{
+  flex:1;background:transparent;border:none;padding:13px 16px;
+  color:var(--text);font-size:14px;outline:none;
+}
+.search-box input::placeholder{color:var(--text3)}
+.search-box button{
+  background:var(--accent);border:none;padding:0 22px;color:#fff;
+  font-size:14px;cursor:pointer;transition:all .25s;font-weight:500;
+  display:flex;align-items:center;gap:6px;
+}
+.search-box button:hover{background:var(--accent2)}
+.search-tips{font-size:12px;color:var(--text3);margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
+.search-tips span{cursor:pointer;transition:color .2s}
+.search-tips span:hover{color:var(--accent2)}
+
+/* ===== Results Grid ===== */
+.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.results-header h2{font-size:18px;font-weight:600}
+.results-header .count{font-size:13px;color:var(--text3)}
+.results-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;
+}
+.song-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;transition:all .3s;backdrop-filter:blur(12px);
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.song-card:hover{border-color:var(--border-hover);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.song-card .art{
+  width:100%;aspect-ratio:1;border-radius:var(--radius-sm);
+  background:var(--bg4);margin-bottom:12px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.song-card .art img{width:100%;height:100%;object-fit:cover;display:block}
+.song-card .art .play-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,0.4);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:all .3s;border-radius:var(--radius-sm);
+}
+.song-card:hover .art .play-overlay{opacity:1}
+.song-card .art .play-overlay .play-icon{
+  width:48px;height:48px;border-radius:50%;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:#fff;transform:scale(.9);transition:all .3s;
+  box-shadow:0 4px 20px rgba(99,102,241,0.4);
+}
+.song-card:hover .art .play-overlay .play-icon{transform:scale(1)}
+.song-card .title{
+  font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px;
+}
+.song-card .artist{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:8px}
+.song-card .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3)}
+.song-card .meta .src-tag{
+  padding:2px 8px;border-radius:8px;background:var(--bg4);font-size:10px;
+}
+.song-card .actions{display:flex;gap:6px;margin-top:10px}
+.song-card .actions button{
+  flex:1;padding:6px 0;border-radius:8px;border:none;font-size:12px;cursor:pointer;transition:all .2s;font-weight:500;
+}
+.song-card .actions .btn-play{background:var(--accent);color:#fff}
+.song-card .actions .btn-play:hover{background:var(--accent2)}
+.song-card .actions .btn-dl{
+  background:var(--bg4);color:var(--text2);border:1px solid var(--border);
+}
+.song-card .actions .btn-dl:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.song-card .badge-free{
+  position:absolute;top:20px;right:20px;
+  padding:3px 10px;border-radius:20px;background:rgba(16,185,129,0.2);
+  color:var(--green);font-size:10px;font-weight:600;backdrop-filter:blur(8px);
+  border:1px solid rgba(16,185,129,0.2);
+}
+
+/* ===== Loading ===== */
+.loading{text-align:center;padding:60px 0;color:var(--text3)}
+.spinner{width:36px;height:36px;border:3px solid var(--bg4);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:80px 20px;color:var(--text3)}
+.empty-state .icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.empty-state h3{font-size:18px;color:var(--text2);margin-bottom:6px}
+.empty-state p{font-size:14px}
+
+/* ===== Bottom Player ===== */
+.player-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(16,22,38,0.95);border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);padding:12px 24px;
+  display:flex;align-items:center;gap:20px;
+  transition:transform .4s ease;
+}
+.player-bar.hidden{transform:translateY(100%)}
+.player-bar .info{display:flex;align-items:center;gap:12px;min-width:200px;max-width:280px;flex-shrink:0}
+.player-bar .info .art{width:44px;height:44px;border-radius:10px;background:var(--bg4);overflow:hidden;flex-shrink:0}
+.player-bar .info .art img{width:100%;height:100%;object-fit:cover}
+.player-bar .info .detail{overflow:hidden}
+.player-bar .info .detail .title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-bar .info .detail .artist{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-bar .controls{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;max-width:600px;margin:0 auto}
+.player-bar .controls .btns{display:flex;align-items:center;gap:16px}
+.player-bar .controls .btns button{
+  background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;
+  transition:all .2s;padding:4px;line-height:1;
+}
+.player-bar .controls .btns button:hover{color:var(--text)}
+.player-bar .controls .btns .play-btn{
+  width:36px;height:36px;border-radius:50%;background:var(--accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.player-bar .controls .btns .play-btn:hover{background:var(--accent2);color:#fff}
+.player-bar .progress{display:flex;align-items:center;gap:10px;width:100%;font-size:11px;color:var(--text3)}
+.player-bar .progress .bar{flex:1;height:4px;background:var(--bg4);border-radius:2px;cursor:pointer;position:relative}
+.player-bar .progress .bar .fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .3s}
+.player-bar .extra{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.player-bar .extra .volume{display:flex;align-items:center;gap:6px}
+.player-bar .extra .volume input[type=range]{width:70px;height:3px;-webkit-appearance:none;background:var(--bg4);border-radius:2px;outline:none}
+.player-bar .extra .volume input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer}
+.player-bar .extra .dl-btn{
+  padding:6px 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--bg3);color:var(--text2);font-size:12px;cursor:pointer;transition:all .2s;
+}
+.player-bar .extra .dl-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ===== Source Info Panel ===== */
+.source-panel{
+  margin-top:28px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;backdrop-filter:blur(12px);
+}
+.source-panel h3{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.source-table{width:100%;border-collapse:collapse}
+.source-table th{
+  text-align:left;font-size:11px;color:var(--text3);padding:8px 12px;
+  border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.3px;font-weight:500;
+}
+.source-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(42,51,70,0.3)}
+.source-table tr:last-child td{border:none}
+.source-table .tag{
+  display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:500;
+}
+.source-table .tag.free{background:rgba(16,185,129,0.12);color:var(--green)}
+.source-table .tag.part{background:rgba(245,158,11,0.12);color:var(--orange)}
+.source-table .tag.paid{background:rgba(239,68,68,0.12);color:var(--red)}
+.source-table .tag.yes{background:rgba(99,102,241,0.12);color:var(--accent2)}
+.source-table .tag.no{background:rgba(100,116,139,0.12);color:var(--text3)}
+.source-table a{color:var(--accent2);text-decoration:none}
+.source-table a:hover{text-decoration:underline}
+.source-table td:first-child{font-weight:600}
+.source-table .star{color:var(--orange);font-size:12px;letter-spacing:1px}
+
+/* ===== Responsive ===== */
+@media(max-width:900px){
+  .header{flex-direction:column;align-items:stretch}
+  .source-bar{justify-content:flex-start}
+  .player-bar{padding:10px 12px;gap:12px;flex-wrap:wrap}
+  .player-bar .info{min-width:140px;max-width:160px}
+  .player-bar .controls .btns{gap:12px}
+  .player-bar .extra .volume input[type=range]{width:50px}
+}
+@media(max-width:600px){
+  .container{padding:12px 14px 100px}
+  .results-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .player-bar .info .art{width:36px;height:36px}
+  .player-bar .extra .volume{display:none}
+  .player-bar .extra .dl-btn{padding:4px 10px;font-size:11px}
+  .search-box select{min-width:60px;font-size:12px}
+  .source-table td,.source-table th{padding:6px 8px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">&#x266B;</div>
+      <div>
+        <h1>音乐聚合搜索</h1>
+        <div class="sub">多源切换 &middot; 在线试听 &middot; 免费下载</div>
+      </div>
+    </div>
+    <div class="source-bar" id="sourceBar">
+      <button class="source-btn active" data-source="netease">
+        <span class="dot green"></span> 网易云音乐
+      </button>
+      <button class="source-btn" data-source="qq">
+        <span class="dot orange"></span> QQ音乐
+      </button>
+      <button class="source-btn" data-source="kuwo">
+        <span class="dot green"></span> 酷我音乐
+      </button>
+      <button class="source-btn" data-source="kugou">
+        <span class="dot orange"></span> 酷狗音乐
+      </button>
+      <button class="source-btn" data-source="migu">
+        <span class="dot green"></span> 咪咕音乐
+      </button>
+      <div style="margin-left:8px;display:flex;gap:6px;align-items:center">
+        <a href="https://music.163.com" target="_blank" title="打开网易云官网" style="color:var(--text3);text-decoration:none;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;transition:all .2s" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--border-hover)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">&#x2197; 网易云官网</a>
+        <a href="https://y.qq.com" target="_blank" title="打开QQ音乐官网" style="color:var(--text3);text-decoration:none;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;transition:all .2s" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--border-hover)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">&#x2197; QQ音乐官网</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-box">
+      <select id="searchType">
+        <option value="1">单曲</option>
+        <option value="10">专辑</option>
+        <option value="100">歌手</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="搜索歌曲、歌手或专辑..." autocomplete="off">
+      <button id="searchBtn">&#x1F50D; 搜索</button>
+    </div>
+    <div class="search-tips">
+      <span style="color:var(--green);font-size:12px;display:flex;align-items:center;gap:4px">&#x26AB; API 已连接 (localhost:3000)</span>
+      <span style="color:var(--text3)">&#x2502</span>
+      <span data-hot="周杰伦">周杰伦</span>
+      <span data-hot="陈奕迅">陈奕迅</span>
+      <span data-hot="林俊杰">林俊杰</span>
+      <span data-hot="邓紫棋">邓紫棋</span>
+      <span data-hot="Taylor Swift">Taylor Swift</span>
+      <span data-hot="热歌榜">&#x1F525; 热歌榜</span>
+      <span data-hot="新歌榜">&#x1F4A5; 新歌榜</span>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-header">
+    <h2 id="resultTitle">&#x1F3B5; 发现音乐</h2>
+    <span class="count" id="resultCount"></span>
+  </div>
+  <div class="results-grid" id="resultsGrid">
+    <div class="empty-state">
+      <div class="icon">&#x1F3B6;</div>
+      <h3>搜索你喜欢的音乐</h3>
+      <p>在上方输入关键词，或点击热门标签快速搜索</p>
+    </div>
+  </div>
+
+  <!-- Sources Info -->
+  <div class="source-panel">
+    <h3>&#x1F4CB; 收录音乐源一览</h3>
+    <div style="overflow-x:auto">
+    <table class="source-table">
+      <thead>
+        <tr>
+          <th>网站</th>
+          <th>免费</th>
+          <th>在线听</th>
+          <th>下载</th>
+          <th>音质</th>
+          <th>曲库</th>
+          <th>评价</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>网易云音乐</td>
+          <td><span class="tag part">部分免费</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td><span class="tag part">部分</span></td>
+          <td>&#x2B50;&#x2B50;&#x2B50;&#x2B50;&#x2B50;</td>
+          <td>&#x1F7E2; 华语最全</td>
+          <td>社区氛围好，推荐算法强</td>
+        </tr>
+        <tr>
+          <td>QQ音乐</td>
+          <td><span class="tag part">部分免费</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td><span class="tag no">需会员</span></td>
+          <td>&#x2B50;&#x2B50;&#x2B50;&#x2B50;&#x2B50;</td>
+          <td>&#x1F7E2; 版权最强</td>
+          <td>独家版权多，音质最佳</td>
+        </tr>
+        <tr>
+          <td>酷我音乐</td>
+          <td><span class="tag free">免费</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td><span class="tag part">部分</span></td>
+          <td>&#x2B50;&#x2B50;&#x2B50;&#x2B50;</td>
+          <td>&#x1F7E1; 较全</td>
+          <td>免费内容多，良心平台</td>
+        </tr>
+        <tr>
+          <td>酷狗音乐</td>
+          <td><span class="tag part">部分免费</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td><span class="tag part">部分</span></td>
+          <td>&#x2B50;&#x2B50;&#x2B50;&#x2B50;</td>
+          <td>&#x1F7E1; 较全</td>
+          <td>老牌平台，音效丰富</td>
+        </tr>
+        <tr>
+          <td>咪咕音乐</td>
+          <td><span class="tag free">免费</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td>&#x2B50;&#x2B50;&#x2B50;</td>
+          <td>&#x1F7E1; 主流齐全</td>
+          <td>最良心，免费下载多</td>
+        </tr>
+        <tr>
+          <td>MyFreeMP3</td>
+          <td><span class="tag free">免费</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td>&#x2B50;&#x2B50;&#x2B50;</td>
+          <td>&#x1F7E1; 搜索聚合</td>
+          <td>免费下载神器</td>
+        </tr>
+        <tr>
+          <td>Slatify</td>
+          <td><span class="tag free">免费</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td><span class="tag yes">&#x2713;</span></td>
+          <td>&#x2B50;&#x2B50;&#x2B50;&#x2B50;</td>
+          <td>&#x1F7E2; 海量</td>
+          <td>国外站，免费听高品质</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Bottom Player ===== -->
+<div class="player-bar hidden" id="playerBar">
+  <div class="info">
+    <div class="art"><img id="playerArt" src="" alt=""></div>
+    <div class="detail">
+      <div class="title" id="playerTitle">未在播放</div>
+      <div class="artist" id="playerArtist">-</div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="btns">
+      <button id="prevBtn">&#x23EE;</button>
+      <button class="play-btn" id="playBtn">&#x25B6;</button>
+      <button id="nextBtn">&#x23ED;</button>
+    </div>
+    <div class="progress">
+      <span id="currentTime">00:00</span>
+      <div class="bar" id="progressBar"><div class="fill" id="progressFill"></div></div>
+      <span id="duration">00:00</span>
+    </div>
+  </div>
+  <div class="extra">
+    <div class="volume">
+      <span style="font-size:14px;cursor:pointer" id="volumeBtn">&#x1F50A;</span>
+      <input type="range" id="volumeRange" min="0" max="100" value="80">
+    </div>
+    <button class="dl-btn" id="downloadBtn">&#x2B07; 下载</button>
+  </div>
+</div>
+
+<audio id="audioPlayer" style="display:none"></audio>
+
+<script>
+// ============================================================
+//  Configuration — public API endpoints
+// ============================================================
+// Local self-hosted NeteaseCloudMusicApi
+const API_BASE = 'http://localhost:3000';
+
+const SOURCES = {
+  netease: { name: '网易云音乐', api: API_BASE, domain: 'https://music.163.com', free: true, dl: true },
+  qq:      { name: 'QQ音乐',     api: API_BASE, domain: 'https://y.qq.com',     free: false, dl: false },
+  kuwo:    { name: '酷我音乐',   api: API_BASE, domain: 'https://kuwo.cn',     free: true, dl: true },
+  kugou:   { name: '酷狗音乐',   api: API_BASE, domain: 'https://kugou.com',   free: false, dl: false },
+  migu:    { name: '咪咕音乐',   api: API_BASE, domain: 'https://migu.cn',     free: true, dl: true },
+};
+
+// ============================================================
+//  State
+// ============================================================
+let currentSource = 'netease';
+let currentSongs = [];
+let currentIndex = -1;
+let isPlaying = false;
+let playlist = [];
+
+const audio = document.getElementById('audioPlayer');
+const playerBar = document.getElementById('playerBar');
+const playBtn = document.getElementById('playBtn');
+const progressFill = document.getElementById('progressFill');
+const currentTimeEl = document.getElementById('currentTime');
+const durationEl = document.getElementById('duration');
+const playerTitle = document.getElementById('playerTitle');
+const playerArtist = document.getElementById('playerArtist');
+const playerArt = document.getElementById('playerArt');
+const volumeRange = document.getElementById('volumeRange');
+const resultsGrid = document.getElementById('resultsGrid');
+const searchInput = document.getElementById('searchInput');
+const searchType = document.getElementById('searchType');
+const searchBtn = document.getElementById('searchBtn');
+const resultTitle = document.getElementById('resultTitle');
+const resultCount = document.getElementById('resultCount');
+
+// ============================================================
+//  Source Switching
+// ============================================================
+document.querySelectorAll('.source-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSource = btn.dataset.source;
+    // re-search if there's a query
+    const q = searchInput.value.trim();
+    if (q) search(q);
+  });
+});
+
+// ============================================================
+//  Search — uses local Netease Cloud Music API
+// ============================================================
+async function search(keyword) {
+  const type = searchType.value;
+  const source = SOURCES[currentSource];
+  if (!source) return;
+
+  resultTitle.textContent = `&#x1F50D; 搜索 "${keyword}" (${source.name})`;
+  resultsGrid.innerHTML = `<div class="loading"><div class="spinner"></div>正在搜索...</div>`;
+  resultCount.textContent = '';
+
+  try {
+    const url = `${source.api}/search?keywords=${encodeURIComponent(keyword)}&type=${type}&limit=30`;
+    const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    const data = await resp.json();
+
+    let songs = [];
+    if (data.result && data.result.songs) {
+      songs = data.result.songs.map(s => ({
+        id: s.id,
+        name: s.name,
+        artist: (s.artists || []).map(a => a.name).join(' / ') || '未知',
+        album: s.album?.name || '',
+        pic: s.album?.picUrl || '',
+        duration: s.duration || 0,
+        source: currentSource,
+        sourceName: source.name,
+      }));
+    } else if (data.songs) {
+      songs = data.songs.map(s => ({
+        id: s.id,
+        name: s.name,
+        artist: (s.ar || []).map(a => a.name).join(' / ') || '未知',
+        album: s.al?.name || '',
+        pic: s.al?.picUrl || '',
+        duration: s.dt || 0,
+        source: currentSource,
+        sourceName: source.name,
+      }));
+    }
+
+    currentSongs = songs;
+    if (songs.length === 0) {
+      resultsGrid.innerHTML = `<div class="empty-state"><div class="icon">&#x1F50D;</div><h3>未找到结果</h3><p>试试其他关键词或切换音乐源</p></div>`;
+      resultCount.textContent = '0 首';
+      return;
+    }
+    resultCount.textContent = `${songs.length} 首`;
+    renderSongs(songs);
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      resultsGrid.innerHTML = `<div class="empty-state"><div class="icon">&#x23F3;</div><h3>请求超时</h3><p>API服务可能未启动，请确认 localhost:3000 已运行</p></div>`;
+    } else {
+      resultsGrid.innerHTML = `<div class="empty-state"><div class="icon">&#x26A0;&#xFE0F;</div><h3>搜索出错</h3><p>${err.message || '网络错误'}</p><p style="font-size:12px;margin-top:8px">请确认 NeteaseCloudMusicApi 已启动</p></div>`;
+    }
+    currentSongs = [];
+    resultCount.textContent = '';
+  }
+}
+
+function renderSongs(songs) {
+  resultsGrid.innerHTML = songs.map((s, i) => {
+    const picUrl = s.pic || '';
+    const defaultBg = 'data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22200%22 height%3D%22200%22%3E%3Crect fill%3D%22%231a1f35%22 width%3D%22200%22 height%3D%22200%22%2F%3E%3Ctext x%3D%2250%25%22 y%3D%2255%25%22 text-anchor%3D%22middle%22 fill%3D%22%2364748b%22 font-size%3D%2236%22%3E%26%23x266B%3B%3C%2Ftext%3E%3C%2Fsvg%3E';
+    return `<div class="song-card" data-index="${i}">
+      <div class="art">
+        <img src="${picUrl || defaultBg}" alt="${s.name}" loading="lazy" onerror="this.src='${defaultBg}'">
+        <div class="play-overlay"><div class="play-icon">&#x25B6;</div></div>
+      </div>
+      <div class="title" title="${escHtml(s.name)}">${escHtml(s.name)}</div>
+      <div class="artist" title="${escHtml(s.artist)}">${escHtml(s.artist)}</div>
+      <div class="meta">
+        <span class="src-tag">${s.sourceName}</span>
+        <span>${fmtDuration(s.duration)}</span>
+      </div>
+      <div class="actions">
+        <button class="btn-play" data-index="${i}">&#x25B6; 播放</button>
+        <button class="btn-dl" data-index="${i}">&#x2B07; 下载</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Attach events
+  resultsGrid.querySelectorAll('.song-card').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      const idx = parseInt(el.dataset.index);
+      playSong(idx);
+    });
+  });
+  resultsGrid.querySelectorAll('.btn-play').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playSong(parseInt(btn.dataset.index));
+    });
+  });
+  resultsGrid.querySelectorAll('.btn-dl').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      downloadSong(idx);
+    });
+  });
+}
+
+// ============================================================
+//  Playback
+// ============================================================
+async function playSong(index) {
+  if (index < 0 || index >= currentSongs.length) return;
+  const song = currentSongs[index];
+  currentIndex = index;
+  const source = SOURCES[song.source] || SOURCES.netease;
+
+  // Update UI
+  playerTitle.textContent = song.name;
+  playerArtist.textContent = song.artist;
+  if (song.pic) playerArt.src = song.pic;
+  playerBar.classList.remove('hidden');
+
+  try {
+    const url = `${source.api}/song/url?id=${song.id}`;
+    const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await resp.json();
+
+    let audioUrl = '';
+    if (data.data && data.data[0]) {
+      audioUrl = data.data[0].url;
+    } else if (data.url) {
+      audioUrl = data.url;
+    } else if (data[0] && data[0].url) {
+      audioUrl = data[0].url;
+    }
+
+    if (!audioUrl) {
+      alert('获取播放地址失败，请尝试其他音乐源');
+      return;
+    }
+
+    audio.src = audioUrl;
+    audio.play().then(() => {
+      isPlaying = true;
+      playBtn.textContent = '&#x23F8;';
+    }).catch(err => {
+      console.log('Play error:', err);
+      alert('播放失败，该歌曲可能受版权保护，请切换其他源尝试');
+    });
+
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      alert('获取歌曲信息失败，请切换其他音乐源');
+    }
+  }
+}
+
+playBtn.addEventListener('click', () => {
+  if (!audio.src) return;
+  if (isPlaying) {
+    audio.pause();
+    isPlaying = false;
+    playBtn.textContent = '&#x25B6;';
+  } else {
+    audio.play().catch(()=>{});
+    isPlaying = true;
+    playBtn.textContent = '&#x23F8;';
+  }
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (currentIndex > 0) playSong(currentIndex - 1);
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (currentIndex < currentSongs.length - 1) playSong(currentIndex + 1);
+});
+
+audio.addEventListener('ended', () => {
+  if (currentIndex < currentSongs.length - 1) {
+    playSong(currentIndex + 1);
+  } else {
+    isPlaying = false;
+    playBtn.textContent = '&#x25B6;';
+  }
+});
+
+audio.addEventListener('timeupdate', () => {
+  if (audio.duration) {
+    const pct = (audio.currentTime / audio.duration) * 100;
+    progressFill.style.width = pct + '%';
+    currentTimeEl.textContent = fmtTime(audio.currentTime);
+  }
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  durationEl.textContent = fmtTime(audio.duration);
+});
+
+// Progress bar click
+document.getElementById('progressBar').addEventListener('click', (e) => {
+  if (!audio.duration) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+});
+
+// Volume
+volumeRange.addEventListener('input', () => {
+  audio.volume = volumeRange.value / 100;
+});
+document.getElementById('volumeBtn').addEventListener('click', () => {
+  audio.muted = !audio.muted;
+  volumeRange.value = audio.muted ? 0 : (audio.volume * 100);
+});
+
+// ============================================================
+//  Download
+// ============================================================
+async function downloadSong(index) {
+  const song = currentSongs[index];
+  if (!song) return;
+  const source = SOURCES[song.source] || SOURCES.netease;
+
+  try {
+    const url = `${source.api}/song/url?id=${song.id}`;
+    const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await resp.json();
+
+    let audioUrl = '';
+    if (data.data && data.data[0]) audioUrl = data.data[0].url;
+    else if (data.url) audioUrl = data.url;
+    else if (data[0] && data[0].url) audioUrl = data[0].url;
+
+    if (!audioUrl) {
+      alert('获取下载链接失败，请尝试其他音乐源');
+      return;
+    }
+
+    // Create a temporary link
+    const link = document.createElement('a');
+    link.href = audioUrl;
+    link.download = `${song.name} - ${song.artist}.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    alert('下载失败，该歌曲可能不支持下载，请切换其他源');
+  }
+}
+
+// ============================================================
+//  Hot tags
+// ============================================================
+document.querySelectorAll('[data-hot]').forEach(el => {
+  el.addEventListener('click', () => {
+    searchInput.value = el.dataset.hot;
+    search(el.dataset.hot);
+  });
+});
+
+// ============================================================
+//  Search on enter / button
+// ============================================================
+searchBtn.addEventListener('click', () => {
+  const q = searchInput.value.trim();
+  if (q) search(q);
+});
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const q = searchInput.value.trim();
+    if (q) search(q);
+  }
+});
+
+// Initial load: search hot songs
+window.addEventListener('DOMContentLoaded', () => {
+  const q = searchInput.value.trim() || '热歌榜';
+  searchInput.value = q;
+  search(q);
+});
+
+// ============================================================
+//  Helpers
+// ============================================================
+function fmtDuration(ms) {
+  if (!ms) return '--:--';
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+function fmtTime(s) {
+  if (!s || !isFinite(s)) return '00:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
